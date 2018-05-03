@@ -1,0 +1,15 @@
+.dub
+docs.json
+__dummy.html
+docs/
+jlox.so
+jlox.dylib
+jlox.dll
+jlox.a
+jlox.lib
+jlox-test-*
+/jlox
+*.exe
+*.o
+*.obj
+*.lst

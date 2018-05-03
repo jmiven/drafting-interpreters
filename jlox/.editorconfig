@@ -1,0 +1,10 @@
+[*.d]
+dfmt_brace_style = allman
+dfmt_soft_max_line_length = 80
+max_line_length = 100
+dfmt_space_after_cast = true
+dfmt_space_after_keywords = true
+dfmt_split_operator_at_line_end = false
+indent_size = 4
+indent_style = space
+insert_final_newline = true
