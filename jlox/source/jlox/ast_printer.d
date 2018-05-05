@@ -22,7 +22,8 @@ string show(virtual!Expr);
     import std.variant : visit;
     import std.conv : to;
 
-    return l.value.visit!((string s) => s, (double d) => to!string(d));
+    return l.value.visit!((string s) => s, (double d) => to!string(d),
+            (bool b) => to!string(b), x => "nil");
 }
 
 @method string _show(Unary u)

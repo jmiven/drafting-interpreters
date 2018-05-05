@@ -3,21 +3,20 @@ module jlox.token;
 
 import std.variant : Algebraic, visit;
 
-alias Lit = Algebraic!(string, double);
+alias Lit = Algebraic!(string, double, bool, typeof(null));
 
 immutable struct Token
 {
-    import std.typecons : Nullable;
-
     TokenType type;
     string lexeme;
-    Nullable!Lit literal;
+    Lit literal;
     int line;
 
-    this(TokenType _type, string _lexeme, int _line)
+    this(TokenType _type, string _lexeme, int _line) @trusted
     {
         type = _type;
         lexeme = _lexeme;
+        literal = Lit(null);
         line = _line;
     }
 
@@ -34,10 +33,9 @@ immutable struct Token
         import std.format : format;
         import std.conv : to;
 
-        if (literal.isNull)
+        string lit = literal.visit!((string s) => s, (double d) => to!string(d), x => "");
+        if (lit.length > 0)
             return format!"%s %s"(type, lexeme);
-
-        string lit = literal.get.visit!((string s) => s, (double d) => to!string(d));
         return format!"%s %s %s"(type, lexeme, lit);
     }
 }
