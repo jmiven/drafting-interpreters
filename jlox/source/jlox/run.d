@@ -1,11 +1,25 @@
 module jlox.run;
 
+import jlox.token;
+
 // crappy but this is a small educational interpreter. Surely it won't bite me?
 bool hadError;
 
 void error(int line, string message)
 {
     report(line, "", message);
+}
+
+void error(Token token, string message)
+{
+    if (token.type == TokenType.EOF)
+    {
+        report(token.line, " at end", message);
+    }
+    else
+    {
+        report(token.line, " at '" ~ token.lexeme ~ "'", message);
+    }
 }
 
 void report(int line, string where, string message) @trusted
@@ -39,13 +53,17 @@ void runPrompt() @trusted
 void run(string source)
 {
     import std.stdio;
-    import jlox.scanner, jlox.token;
+    import jlox.scanner, jlox.expr;
+    import jlox.parser;
+    import ast = jlox.ast_printer;
 
     auto scanner = Scanner(source);
     Token[] tokens = scanner.scanTokens();
+    auto parser = Parser(tokens);
+    Expr expression = parser.parse();
 
-    foreach (tok; tokens)
-    {
-        writeln(tok);
-    }
+    if (hadError)
+        return;
+
+    writeln(ast.show(expression));
 }

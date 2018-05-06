@@ -5,16 +5,23 @@ import jlox.expr;
 
 struct Parser
 {
+    private Token[] _tokens;
+    private int _current = 0;
+
 public:
     this(Token[] tokens)
     {
         _tokens = tokens;
     }
 
-private:
-    Token[] _tokens;
-    int _current = 0;
+    Expr parse()
+    {
+        import std.exception : ifThrown;
 
+        return expression().ifThrown(null);
+    }
+
+private:
     Expr expression()
     {
         return equality();
@@ -64,13 +71,12 @@ private:
                 return new Literal(Lit(false));
             if (match(TRUE))
                 return new Literal(Lit(true));
+
             if (match(NIL))
                 return new Literal(Lit(null));
 
             if (match(NUMBER, STRING))
-            {
                 return new Literal(previous().literal);
-            }
 
             if (match(LEFT_PAREN))
             {
@@ -79,14 +85,55 @@ private:
                 return new Grouping(expr);
             }
         }
-        assert(0); // unreachable
+        throw error(peek(), "Expect expression.");
     }
 
     // helper methods
 
-    void consume(TokenType t, string s)
+    Token consume(TokenType t, string message)
     {
-        // stub
+        if (check(t))
+            return advance();
+        throw error(peek(), message);
+    }
+
+    ParseException error(Token token, string message)
+    {
+        import jlox.run : error;
+
+        error(token, message);
+        return new ParseException(message);
+    }
+
+    void synchronize()
+    {
+        advance();
+
+        while (!isAtEnd())
+        {
+            with (TokenType)
+            {
+                if (previous().type == SEMICOLON)
+                    return;
+
+                switch (peek().type)
+                {
+                case CLASS:
+                case FUN:
+                case VAR:
+                case FOR:
+                case IF:
+                case WHILE:
+                case PRINT:
+                case RETURN:
+                    return;
+                default:
+                    break;
+                }
+
+                advance();
+            }
+        }
     }
 
     Expr leftAssocBinary(Expr delegate() rule, TokenType[] operators...)
@@ -143,4 +190,11 @@ private:
     {
         return _tokens[_current - 1];
     }
+}
+
+private class ParseException : Exception
+{
+    import std.exception : basicExceptionCtors;
+
+    mixin basicExceptionCtors;
 }
