@@ -1,9 +1,13 @@
 module jlox.run;
 
 import jlox.token;
+import jlox.scanner, jlox.expr;
+import jlox.parser;
+import jlox.interpreter;
 
 // crappy but this is a small educational interpreter. Surely it won't bite me?
 bool hadError;
+bool hadRuntimeError;
 
 void error(int line, string message)
 {
@@ -26,8 +30,16 @@ void report(int line, string where, string message) @trusted
 {
     import std.stdio;
 
-    stderr.writefln("[line %s] Error%s: %s", line, where, message);
+    stderr.writefln!"[line %s] Error%s: %s"(line, where, message);
     hadError = true;
+}
+
+void runtimeError(RuntimeException e)
+{
+    import std.stdio;
+
+    stderr.writefln!("%s\n[line %s]")(e.message(), e.token.line);
+    hadRuntimeError = true;
 }
 
 void runFile(string path) @trusted
@@ -53,8 +65,6 @@ void runPrompt() @trusted
 void run(string source)
 {
     import std.stdio;
-    import jlox.scanner, jlox.expr;
-    import jlox.parser;
     import ast = jlox.ast_printer;
 
     auto scanner = Scanner(source);
@@ -65,5 +75,5 @@ void run(string source)
     if (hadError)
         return;
 
-    writeln(ast.show(expression));
+    interpret(expression);
 }

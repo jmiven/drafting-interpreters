@@ -1,7 +1,7 @@
 int main(string[] args)
 {
     import std.stdio : writeln;
-    import jlox.run : runFile, runPrompt, hadError;
+    import jlox.run : runFile, runPrompt, hadError, hadRuntimeError;
     static import openmethods;
 
     openmethods.updateMethods();
@@ -20,6 +20,8 @@ int main(string[] args)
     }
 
     if (hadError)
-        return (65);
-    return (0);
+        return 65;
+    if (hadRuntimeError)
+        return 70;
+    return 0;
 }
