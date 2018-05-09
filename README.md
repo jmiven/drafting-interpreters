@@ -45,6 +45,12 @@ I then reimplemented `Expr` as a `std.variant.Algebraic` alias and used
 2018](https://dconf.org/2018/talks/leroy.html) and decided to try his
 openmethods instead.
 
+#### `jlox/interpreter.d` (Chapter 7)
+
+I had some fun using a `static foreach` to generate at compile-time case
+statements for a long and boring switch. I also played with an alias with lambda
+syntax and wrote a bit more unittests than usual.
+
 ### To Be Continued
 
 This is a work in progress but I'm regularly working through the book.
