@@ -69,10 +69,16 @@ unittest
         new Literal(Lit("hello")),
         Token(TokenType.PLUS, "+", 1),
         new Literal(Lit(false)));
+    Expr e4 =
+      new Binary(
+        new Literal(Lit(42.0)),
+        Token(TokenType.SLASH, "/", 1),
+        new Literal(Lit(0.0)));
     // dfmt on
     assert(eval(e1) == 42.0);
     assert(eval(e2) == "hello world");
-    assertThrown!RuntimeException(eval(e3));
+    assertThrown!RuntimeException(eval(e3), "incompatible types");
+    assertThrown!RuntimeException(eval(e4), "division by zero");
 }
 
 @method Value _eval(Literal l)
@@ -117,12 +123,15 @@ unittest
             return Value(left.get!double() %s right.get!double());
         };
         static foreach (t; [tuple(GREATER, ">"), tuple(GREATER_EQUAL, ">="),
-                tuple(LESS, "<"), tuple(LESS_EQUAL, "<="), tuple(MINUS, "-"),
-                tuple(SLASH, "/"), tuple(STAR, "*")])
+                tuple(LESS, "<"), tuple(LESS_EQUAL, "<="), tuple(MINUS, "-"), tuple(STAR, "*")])
         {
             mixin(format!tpl_double(t[0], t[1]));
         }
-
+    case SLASH:
+        checkNumberOperand(b.operator, left, right);
+        if (right == 0.0)
+            throw new RuntimeException(b.operator, "division by zero");
+        return Value(left.get!double() / right.get!double());
     case BANG_EQUAL:
         return Value(left != right);
     case EQUAL_EQUAL:
