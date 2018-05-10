@@ -38,7 +38,7 @@ void runtimeError(RuntimeException e)
 {
     import std.stdio;
 
-    stderr.writefln!("%s\n[line %s]")(e.message(), e.token.line);
+    stderr.writefln!("[line %s] Error: %s")(e.token.line, e.message());
     hadRuntimeError = true;
 }
 
