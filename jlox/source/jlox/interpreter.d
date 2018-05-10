@@ -48,7 +48,7 @@ unittest
     import std.exception : assertThrown;
 
     // dfmt off
-    Expr e1 =
+    Expr eNumber =
       new Binary(
         new Binary(
           new Literal(Lit(18.0)),
@@ -56,7 +56,7 @@ unittest
           new Literal(Lit(2.0))),
         Token(TokenType.PLUS, "+", 1),
         new Literal(Lit(6.0)));
-    Expr e2 =
+    Expr eString =
       new Binary(
         new Binary(
           new Literal(Lit("hello")),
@@ -64,21 +64,39 @@ unittest
           new Literal(Lit(" "))),
         Token(TokenType.PLUS, "+", 1),
         new Literal(Lit("world")));
-    Expr e3 =
-      new Binary(
-        new Literal(Lit("hello")),
-        Token(TokenType.PLUS, "+", 1),
-        new Literal(Lit(false)));
-    Expr e4 =
+    Expr eDivByZero =
       new Binary(
         new Literal(Lit(42.0)),
         Token(TokenType.SLASH, "/", 1),
         new Literal(Lit(0.0)));
+    Expr eConvertBoolToString =
+      new Binary(
+        new Literal(Lit("hello")),
+        Token(TokenType.PLUS, "+", 1),
+        new Literal(Lit(false)));
+    Expr eConvertNumberToString =
+      new Binary(
+        new Literal(Lit("hello")),
+        Token(TokenType.PLUS, "+", 1),
+        new Literal(Lit(42.0)));
+    Expr eConvertNilToString =
+      new Binary(
+        new Literal(Lit("hello")),
+        Token(TokenType.PLUS, "+", 1),
+        new Literal(Lit(null)));
+    Expr eConvertToStringCommutative =
+      new Binary(
+        new Literal(Lit(99.0)),
+        Token(TokenType.PLUS, "+", 1),
+        new Literal(Lit("Luftballons")));
     // dfmt on
-    assert(eval(e1) == 42.0);
-    assert(eval(e2) == "hello world");
-    assertThrown!RuntimeException(eval(e3), "incompatible types");
-    assertThrown!RuntimeException(eval(e4), "division by zero");
+    assert(eval(eNumber) == 42.0);
+    assert(eval(eString) == "hello world");
+    assertThrown!RuntimeException(eval(eDivByZero), "division by zero");
+    assert(eval(eConvertBoolToString) == "hellofalse");
+    assert(eval(eConvertNumberToString) == "hello42");
+    assert(eval(eConvertNilToString) == "hello");
+    assert(eval(eConvertToStringCommutative) == "99Luftballons");
 }
 
 @method Value _eval(Literal l)
@@ -109,6 +127,7 @@ unittest
 
 @method Value _eval(Binary b)
 {
+    import std.conv : to;
     import std.typecons : tuple;
     import std.format : format;
 
@@ -139,9 +158,12 @@ unittest
     case PLUS:
         if (bothConvertTo!double(left, right))
             return Value(left.get!double() + right.get!double());
-        if (bothConvertTo!string(left, right))
-            return Value(left.get!string() ~ right.get!string());
-        throw new RuntimeException(b.operator, "operands must be two numbers or two strings");
+        if (left.convertsTo!string())
+            return Value(left.get!string() ~ right.visit!((typeof(null) p) => "", x => to!string(x)));
+        if (right.convertsTo!string())
+            return Value(left.visit!((typeof(null) p) => "", x => to!string(x)) ~ right.get!string());
+        throw new RuntimeException(b.operator,
+                "operands must be two numbers or at least one of them must be a string");
     default:
         assert(0, "unreachable");
     }
