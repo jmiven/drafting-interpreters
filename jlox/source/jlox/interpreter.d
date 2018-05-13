@@ -2,22 +2,20 @@ module jlox.interpreter;
 
 import std.variant;
 import openmethods;
-import jlox.expr, jlox.token;
+import jlox.expr, jlox.stmt, jlox.token;
 
 mixin(registerMethods);
 
 alias Value = Lit;
 
-void interpret(Expr expression)
+void interpret(Stmt[] program)
 {
     import jlox.run : runtimeError;
-    import std.stdio : writeln;
 
     try
     {
-        Value v = eval(expression);
-        writeln(stringify(v));
-
+        foreach (statement; program)
+            execute(statement);
     }
     catch (RuntimeException e)
     {
@@ -168,6 +166,20 @@ unittest
         assert(0, "unreachable");
     }
 
+}
+
+void execute(virtual!Stmt);
+
+@method void _execute(ExpressionStmt stmt)
+{
+    eval(stmt.expression);
+}
+
+@method void _execute(PrintStmt stmt)
+{
+    import std.stdio : writeln;
+
+    eval(stmt.expression).stringify().writeln();
 }
 
 class RuntimeException : Exception

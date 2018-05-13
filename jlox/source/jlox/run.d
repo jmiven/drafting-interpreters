@@ -1,7 +1,7 @@
 module jlox.run;
 
-import jlox.token;
-import jlox.scanner, jlox.expr;
+import jlox.token, jlox.scanner;
+import jlox.stmt;
 import jlox.parser;
 import jlox.interpreter;
 
@@ -70,10 +70,10 @@ void run(string source)
     auto scanner = Scanner(source);
     Token[] tokens = scanner.scanTokens();
     auto parser = Parser(tokens);
-    Expr expression = parser.parse();
+    Stmt[] program = parser.parse();
 
     if (hadError)
         return;
 
-    interpret(expression);
+    interpret(program);
 }

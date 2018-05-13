@@ -1,7 +1,7 @@
 module jlox.parser;
 
 import jlox.token;
-import jlox.expr;
+import jlox.expr, jlox.stmt;
 
 struct Parser
 {
@@ -14,14 +14,41 @@ public:
         _tokens = tokens;
     }
 
-    Expr parse()
+    Stmt[] parse()
     {
-        import std.exception : ifThrown;
+        Stmt[] statements;
 
-        return expression().ifThrown(null);
+        while (!isAtEnd())
+        {
+            statements ~= statement();
+        }
+
+        return statements;
     }
 
 private:
+    Stmt statement()
+    {
+        if (match(TokenType.PRINT))
+            return printStatement();
+
+        return expressionStatement();
+    }
+
+    Stmt expressionStatement()
+    {
+        Expr expr = expression();
+        consume(TokenType.SEMICOLON, "Expect ';' after expression.");
+        return new ExpressionStmt(expr);
+    }
+
+    Stmt printStatement()
+    {
+        Expr value = expression();
+        consume(TokenType.SEMICOLON, "Expect ';' after value.");
+        return new PrintStmt(value);
+    }
+
     Expr expression()
     {
         return equality();

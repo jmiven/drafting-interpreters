@@ -1,1 +1,4 @@
-"hello" + " " + "world"
+print "hello" + " " + "world";
+"ignored";
+print 12 + 6 * 5; // a comment
+print true;
