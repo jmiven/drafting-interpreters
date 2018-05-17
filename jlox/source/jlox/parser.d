@@ -20,13 +20,29 @@ public:
 
         while (!isAtEnd())
         {
-            statements ~= statement();
+            statements ~= declaration();
         }
 
         return statements;
     }
 
 private:
+    Stmt declaration()
+    {
+        try
+        {
+            if (match(TokenType.VAR))
+                return varDeclaration();
+
+            return statement();
+        }
+        catch (ParseException error)
+        {
+            synchronize();
+            return null;
+        }
+    }
+
     Stmt statement()
     {
         if (match(TokenType.PRINT))
@@ -47,6 +63,22 @@ private:
         Expr value = expression();
         consume(TokenType.SEMICOLON, "Expect ';' after value.");
         return new PrintStmt(value);
+    }
+
+    Stmt varDeclaration()
+    {
+        import std.typecons : Nullable;
+
+        Token name = consume(TokenType.IDENTIFIER, "Expect variable name.");
+
+        Expr initializer;
+        if (match(TokenType.EQUAL))
+        {
+            initializer = expression();
+        }
+
+        consume(TokenType.SEMICOLON, "Expect ';' after variable declaration.");
+        return new VarStmt(name, Nullable!Expr(initializer));
     }
 
     Expr expression()
@@ -104,6 +136,9 @@ private:
 
             if (match(NUMBER, STRING))
                 return new Literal(previous().literal);
+
+            if (match(IDENTIFIER))
+                return new Variable(previous());
 
             if (match(LEFT_PAREN))
             {
